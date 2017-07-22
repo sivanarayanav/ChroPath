@@ -126,29 +126,66 @@ function generateXpath(element) {
     }
 }
 
-function generateCSS(el) {
-        if (!(el instanceof Element)) 
-            return;
-        var path = [];
-        while (el.nodeType === Node.ELEMENT_NODE) {
-            var selector = el.nodeName.toLowerCase();
-            if (el.id){
-                path.unshift('#'+el.id);
-                break;
-            }else if (el.className){
-                path.unshift('.'+el.className.trim().replace(/\s+/g, "."));
-                break;
-            }else {
-                var sib = el, nth = 1;
-                while (sib = sib.previousElementSibling) {
-                    if (sib.nodeName.toLowerCase() == selector)
-                       nth++;
-                    }
-                    if (nth != 1)
-                        selector += ":nth-of-type("+nth+")";
-                }
-            path.unshift(selector);
-            el = el.parentNode;
+
+function getNodename(element) {
+    var name = "", className;
+    if (element.classList.length) {
+        name = [element.tagName.toLowerCase()];
+        className = element.className.trim();
+        name.push(className.split(" ").join("."));
+        name = name.join(".")
+    }
+    return name;
+}
+
+function getChildNumber(node) {
+    var classes = {}, i, firstClass, uniqueClasses;
+    var parentNode = node.parentNode, childrenLen;
+    childrenLen= parentNode.children.length;
+    for (i = 0; i < childrenLen; i++) {
+        if (parentNode.children[i].classList.length) {
+            firstClass = parentNode.children[i].classList[0];
+            if (!classes[firstClass]) {
+                classes[firstClass] = [parentNode.children[i]]
+            } else {
+                classes[firstClass].push(parentNode.children[i])
+            }
         }
-        return path.join(">");
+    }
+    uniqueClasses = Object.keys(classes).length;
+    if (uniqueClasses && uniqueClasses === childrenLen) {
+        return Array.prototype.indexOf.call(classes[node.classList[0]], node);
+    } else if (uniqueClasses && uniqueClasses !== childrenLen) {
+        return Array.prototype.indexOf.call(parentNode.children, node);
+    } else {
+        return 0;
+    }
+}
+
+
+function parents(element, _array) {
+    var name, index;
+    if (_array === undefined) {
+        _array = []; // initial call
+    }
+    else {
+        index = getChildNumber(element);
+        name = getNodename(element);
+        if (name) {
+            if (index) {
+                name += ":nth-child(" + ( index + 1) + ")"
+            }
+            _array.push(name);
+        }
+    }
+    if (element.tagName !== 'BODY') return parents(element.parentNode, _array);
+    else return _array;
+}
+
+
+function generateCSS(el) {
+    if (!(el instanceof Element))
+        return;
+    var path = parents(el, []);
+    return path.reverse().join(" ");
 }
