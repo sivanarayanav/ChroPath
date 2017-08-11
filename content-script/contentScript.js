@@ -153,12 +153,22 @@ function getChildNumber(node) {
         }
     }
     uniqueClasses = Object.keys(classes).length;
-    if (uniqueClasses && uniqueClasses === childrenLen) {
-        return Array.prototype.indexOf.call(classes[node.classList[0]], node);
+    var obj = {
+        childIndex : -1,
+        childLen : childrenLen
+    }
+
+
+    if (classes[Object.keys(classes)[0]] === childrenLen) {
+        obj.childIndex = Array.prototype.indexOf.call(classes[node.classList[0]], node);
+        obj.childLen = classes[Object.keys(classes)[0]].length;
+        return obj
     } else if (uniqueClasses && uniqueClasses !== childrenLen) {
-        return Array.prototype.indexOf.call(parentNode.children, node);
+        obj.childIndex = Array.prototype.indexOf.call(parentNode.children, node);
+        obj.childLen = classes[Object.keys(classes)[0]].length;
+        return obj
     } else {
-        return 0;
+        return obj
     }
 }
 
@@ -166,14 +176,14 @@ function getChildNumber(node) {
 function parents(element, _array) {
     var name, index;
     if (_array === undefined) {
-        _array = []; // initial call
+        _array = [];
     }
     else {
         index = getChildNumber(element);
         name = getNodename(element);
         if (name) {
-            if (index) {
-                name += ":nth-child(" + ( index + 1) + ")"
+            if (index.childLen > 1 && index.childIndex !== -1) {
+                name += ":nth-child(" + ( index.childIndex + 1) + ")"
             }
             _array.push(name);
         }
